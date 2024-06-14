@@ -51,3 +51,26 @@ This repository contains the solution to the bank management problem. The soluti
     python task1.py input/input_1.txt output/output_1.txt
     ```
 
+## Description
+
+### Classes:
+
+- `Transaction`: Represents a bank transaction with a timestamp, type (deposit or withdraw), amount, and state (accepted or rejected).
+- `Query`: Represents a query with a start time and an end time.
+- `Bank`: Manages transactions and queries. It maintains the current reserve amount, a list of transactions, a prefix sum of deposits, and a list of timestamps.
+
+### Transaction Processing:
+
+- `add_transaction`: Adds a transaction to the bank's records. Deposits increase the reserve, while withdrawals decrease it if funds are available; otherwise, they are rejected.
+- `process_query`: Processes queries to determine the number of rejected or accepted withdrawals within a specified time range.
+
+### Input/Output Functions:
+
+- `read_input`: Reads the initial reserve, transactions, and queries from an input file.
+- `write_output`: Writes the results of the queries to an output file.
+
+### Main Function:
+
+The script reads input and output file names from command line arguments.
+It processes transactions and queries, then writes the results to the specified output file.
+
