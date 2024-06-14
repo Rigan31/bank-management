@@ -1,15 +1,13 @@
 import sys
-from enum import Enum
+import bisect
 
-class Transaction_Type(Enum):
-    DEPOSIT = 1
-    WITHDRAW = 2
 
 class Transaction:
     def __init__(self, timestamp, transaction_type, amount):
         self.timestamp = timestamp
         self.transaction_type = transaction_type
         self.amount = amount
+        self.state = "accept"
 
 
 class Query:
@@ -22,49 +20,74 @@ class Bank:
     def __init__(self, initial_reserve):
         self.initial_reserve = initial_reserve
         self.transactions = []
+        self.deposit_prefix_sum = []
+        self.timestamps = []
+        self.currentAmount = 0
 
     def add_transaction(self, timestamp, transaction_type, amount):
-        self.transactions.append(Transaction(timestamp, transaction_type, amount))
+        transaction = Transaction(timestamp, transaction_type, amount)
+        reserve = self.currentAmount
+        prefix_sum = 0
+        if len(self.deposit_prefix_sum) != 0:
+            prefix_sum = self.deposit_prefix_sum[-1]
 
-    def process_query(self, start_time, end_time):
-        reserve = self.initial_reserve
-        original_declined = []
-        for timestamp, transaction_type, amount in self.transactions:
-            if transaction_type == "Withdraw" and reserve < amount:
-                original_declined.append((timestamp, transaction_type, amount))
+        if transaction_type == "Withdraw":
+            if reserve < amount:
+                transaction.state = "reject"
             else:
-                reserve += amount if transaction_type == "Deposit" else -amount
-        
-        reserve = self.initial_reserve
-        in_range_deposits = []
-        in_range_withdrawals = []
-        out_of_range_transactions = []
+                reserve -= amount
+        else:
+            reserve += amount
+            prefix_sum += amount
 
-        for timestamp, transaction_type, amount in self.transactions:
-            if start_time <= timestamp < end_time:
-                if transaction_type == "Deposit":
-                    in_range_deposits.append((timestamp, transaction_type, amount))
+        self.transactions.append(transaction)
+        self.currentAmount = reserve
+        self.deposit_prefix_sum.append(prefix_sum)
+        self.timestamps.append(timestamp)
+
+    def process_query(self, query):
+        if len(self.timestamps) == 0:
+            return 0
+        start_time = query.start_time
+        end_time = query.end_time
+
+        if start_time > self.timestamps[-1]:
+            return 0
+        start_index = bisect.bisect_left(self.timestamps, start_time)
+        end_index = bisect.bisect_right(self.timestamps, end_time)
+
+        time_range_deposit = (
+            self.deposit_prefix_sum[end_index - 1]
+            - self.deposit_prefix_sum[start_index]
+        )
+        reserve = time_range_deposit + self.initial_reserve
+
+        answer = 0
+        for transaction in self.transactions:
+            if transaction.transaction_type == "Withdraw":
+                if reserve >= transaction.amount:
+                    reserve -= transaction.amount
+                    if transaction.state == "reject":
+                        answer += 1
                 else:
-                    in_range_withdrawals.append((timestamp, transaction_type, amount))
+                    if transaction.state == "accept":
+                        answer -= 1
             else:
-                out_of_range_transactions.append((timestamp, transaction_type, amount))
-        
-        transactions_reordered = out_of_range_transactions + in_range_deposits + in_range_withdrawals
-        reprocessed_declined = []
+                if (
+                    self.timestamps[start_index] > transaction.timestamp
+                    or transaction.timestamp >= self.timestamps[end_index - 1]
+                ):
+                    reserve += transaction.amount
+        return answer
 
-        for timestamp, transaction_type, amount in transactions_reordered:
-            if transaction_type == "Withdraw" and reserve < amount:
-                reprocessed_declined.append((timestamp, transaction_type, amount))
-            else:
-                reserve += amount if transaction_type == "Deposit" else -amount
-        
-        return len(original_declined) - len(reprocessed_declined)
 
 def read_input(filename):
-    with open(filename, 'r') as file:
-        initial_reserve, num_transactions, num_queries = map(int, file.readline().split())
+    with open(filename, "r") as file:
+        initial_reserve, num_transactions, num_queries = map(
+            int, file.readline().split()
+        )
         bank = Bank(initial_reserve)
-        
+
         for _ in range(num_transactions):
             parts = file.readline().split()
             timestamp = int(parts[0])
@@ -77,22 +100,28 @@ def read_input(filename):
             parts = file.readline().split()
             start_time = int(parts[1])
             end_time = int(parts[2])
-            queries.append((start_time, end_time))
-        
+            queries.append(Query(start_time, end_time))
+
         return bank, queries
 
+
 def write_output(filename, results):
-    with open(filename, 'w') as file:
+    with open(filename, "w") as file:
         for result in results:
             file.write(f"{result}\n")
+
 
 def main():
     input_file = sys.argv[1]
     output_file = sys.argv[2]
 
     bank, queries = read_input(input_file)
-    results = [2, 0, 1]
+
+    results = []
+    for query in queries:
+        results.append(bank.process_query(query))
     write_output(output_file, results)
+
 
 if __name__ == "__main__":
     main()
