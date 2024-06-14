@@ -1,0 +1,15 @@
+6638 11 3
+983 Deposit 1941
+1296 Deposit 1154
+1981 Withdraw 2518
+2665 Deposit 5075
+3283 Deposit 111
+3525 Deposit 2499
+4209 Withdraw 3160
+5104 Deposit 2624
+5504 Withdraw 9339
+6198 Withdraw 3025
+7084 Deposit 753
+Query 1604 2559
+Query 141 1689
+Query 4550 8141
