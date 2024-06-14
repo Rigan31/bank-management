@@ -24,7 +24,9 @@ This repository contains the solution to the bank management problem. The soluti
     ```sh
     git clone https://github.com/your-username/bank-management.git
     cd bank-management
+    cd Task1
     ```
+    
 
 2. Build the Docker image:
     ```sh
@@ -33,7 +35,7 @@ This repository contains the solution to the bank management problem. The soluti
 
 3. Run the Docker container:
     ```sh
-    docker run -v $(pwd)/input:/usr/src/app/input -v $(pwd)/output:/usr/src/app/output bank-management
+    docker run --rm -v $(pwd)/input/input_1.txt:/app/input/input_1.txt -v $(pwd)/output/output_1.txt:/app/output/output_1.txt bank-management input/input_1.txt output/output_1.txt
     ```
 
 ### Without Docker
@@ -42,15 +44,10 @@ This repository contains the solution to the bank management problem. The soluti
     ```sh
     git clone https://github.com/your-username/bank-management.git
     cd bank-management
+    cd Task1
     ```
-
-2. Install dependencies:
+2. Run the script:
     ```sh
-    pip install -r requirements.txt
-    ```
-
-3. Run the script:
-    ```sh
-    python main.py
+    python task1.py input/input_1.txt output/output_1.txt
     ```
 
